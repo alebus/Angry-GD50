@@ -48,9 +48,12 @@ function AlienLaunchMarker:update(dt)
             -- spawn new alien in the world, passing in user data of player
             self.alien = Alien(self.world, 'round', self.shiftedX, self.shiftedY, 'Player')
 
+            -- quick way to set this to false because the user may have pressed space before the Alien player was launched. 
+            Level:resetPlayerSplit()
+
             -- apply the difference between current X,Y and base X,Y as launch vector impulse
             self.alien.body:setLinearVelocity((self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
-
+            
             -- make the alien pretty bouncy
             self.alien.fixture:setRestitution(0.4)
             self.alien.body:setAngularDamping(1)

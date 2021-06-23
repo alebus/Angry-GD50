@@ -14,6 +14,12 @@ function Level:init()
     -- and 30 units of Y gravity (for downward force)
     self.world = love.physics.newWorld(0, 300)
 
+    -- if the player has collided with anything yet
+    self.playerCollided = false
+
+    -- if the player has already been split into 3
+    self.playerSplit = false
+
     -- bodies we will destroy after the world update cycle; destroying these in the
     -- actual collision callbacks can cause stack overflow and other errors
     self.destroyedBodies = {}
@@ -27,6 +33,8 @@ function Level:init()
 
         -- if we collided between both the player and an obstacle...
         if types['Obstacle'] and types['Player'] then
+
+            self.playerCollided = true
 
             -- grab the body that belongs to the player
             local playerFixture = a:getUserData() == 'Player' and a or b
@@ -60,6 +68,8 @@ function Level:init()
         -- if we collided between the player and the alien...
         if types['Player'] and types['Alien'] then
 
+            self.playerCollided = true
+
             -- grab the bodies that belong to the player and alien
             local playerFixture = a:getUserData() == 'Player' and a or b
             local alienFixture = a:getUserData() == 'Alien' and a or b
@@ -75,6 +85,7 @@ function Level:init()
 
         -- if we hit the ground, play a bounce sound
         if types['Player'] and types['Ground'] then
+            self.playerCollided = true
             gSounds['bounce']:stop()
             gSounds['bounce']:play()
         end
@@ -146,6 +157,10 @@ function Level:update(dt)
         end
     end
 
+   
+    -- debug
+    --print("self.playerCollided: ", self.playerCollided)
+
     -- reset destroyed bodies to empty table for next update phase
     self.destroyedBodies = {}
 
@@ -201,6 +216,7 @@ function Level:render()
         alien:render()
     end
 
+
     for k, obstacle in pairs(self.obstacles) do
         obstacle:render()
     end
@@ -221,4 +237,52 @@ function Level:render()
         love.graphics.printf('VICTORY', 0, VIRTUAL_HEIGHT / 2 - 32, VIRTUAL_WIDTH, 'center')
         love.graphics.setColor(1, 1, 1, 1)
     end
+end
+
+
+
+function Level:spawnPlayers()
+
+    
+    if not self.playerSplit and self.launchMarker.launched then
+
+        
+        -- todo see the instructions about not ending launchmarker until all have come to a stop
+        -- todo maybe use a diff table or otherwise change logic to end level
+        -- because currently I think there are still "enemies" in the table so it never ends
+
+        local origX = self.launchMarker.alien.body:getX( )
+        local origY = self.launchMarker.alien.body:getY( )
+
+
+        self.alien2 = Alien(self.world, 'round', origX, origY, 'Player')
+        self.alien2.fixture:setRestitution(0.4)
+        self.alien2.body:setAngularDamping(1)
+        self.alien2.body:setLinearVelocity((self.launchMarker.baseX - self.launchMarker.shiftedX) * 10, 
+            ( 5 + self.launchMarker.baseY - self.launchMarker.shiftedY) * 10)
+
+        
+        self.alien3 = Alien(self.world, 'round', origX, origY, 'Player')
+        self.alien3.fixture:setRestitution(0.4)
+        self.alien3.body:setAngularDamping(1)
+        self.alien3.body:setLinearVelocity((self.launchMarker.baseX - self.launchMarker.shiftedX) * 10, 
+            ( -5 + self.launchMarker.baseY - self.launchMarker.shiftedY) * 10)
+
+        
+        table.insert(self.aliens, self.alien2)
+        table.insert(self.aliens, self.alien3)
+
+
+        self.playerSplit = true
+        print("playerSplit: ", self.playerSplit)
+    end
+
+
+end
+
+
+function Level:resetPlayerSplit()
+
+    self.playerSplit = false
+
 end

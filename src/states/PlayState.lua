@@ -18,6 +18,12 @@ function PlayState:update(dt)
         love.event.quit()
     end
 
+
+    if love.keyboard.wasPressed('space') then
+        print("space pressed")
+        self.level:spawnPlayers()
+    end
+
     -- update camera
     if love.keyboard.isDown('left') then
         self.levelTranslateX = self.levelTranslateX + MAP_SCROLL_X_SPEED * dt
