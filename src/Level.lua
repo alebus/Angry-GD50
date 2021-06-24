@@ -185,19 +185,85 @@ function Level:update(dt)
         end
     end
 
+    
     -- replace launch marker if original alien stopped moving
     if self.launchMarker.launched then
         local xPos, yPos = self.launchMarker.alien.body:getPosition()
         local xVel, yVel = self.launchMarker.alien.body:getLinearVelocity()
+
+
         
+
+
         -- if we fired our alien to the left or it's almost done rolling, respawn
         if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
-            self.launchMarker.alien.body:destroy()
-            self.launchMarker = AlienLaunchMarker(self.world)
+            print("alien1 has stopped moving")
+            -- if there are 2 more to check, wait for them as well
+            if self.playerSplit then
+                
+                local xPos2, yPos2 = self.alien2.body:getPosition()
+                local xVel2, yVel2 = self.alien2.body:getLinearVelocity()
+            
+                local xPos3, yPos3 = self.alien3.body:getPosition()
+                local xVel3, yVel3 = self.alien3.body:getLinearVelocity()
+            
+        
+        -- I added > VIRTUAL_WIDTH to fix a bug where it would not end if alien2 or alien3 flew off the screen to the right
 
-            -- re-initialize level if we have no more aliens
-            if #self.aliens == 0 then
-                gStateMachine:change('start')
+                if (xPos2 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel2) + math.abs(yVel2) < 1.5)) 
+                    and (xPos3 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel3) + math.abs(yVel3) < 1.5)) then
+                
+                    -- this always happens, post-split or not
+                    self.launchMarker.alien.body:destroy()
+                    self.launchMarker = AlienLaunchMarker(self.world)
+
+                    print("alien 2 and 3 have stopped moving")
+                    self.alien2.body:destroy()
+                    self.alien3.body:destroy()
+            
+                    for i = #self.aliens, 1, -1 do
+                        if self.aliens[i].body:isDestroyed() then
+                            table.remove(self.aliens, i)
+                        end
+                    end
+                
+                    self.playerSplit = false
+
+                        -- re-initialize level if we have no more enemy aliens
+                        local enemyAlienLeft = false
+                        for k, alien in pairs(self.aliens) do
+                        
+                            if alien.type == 'square' then
+                                enemyAlienLeft = true
+                            end
+                        
+                        end
+                
+                        if not enemyAlienLeft then
+                      
+                            gStateMachine:change('start')
+                        end
+                end
+            else -- this is all the code for if there is only one alien
+
+                self.launchMarker.alien.body:destroy()
+                self.launchMarker = AlienLaunchMarker(self.world)
+
+                
+                -- re-initialize level if we have no more enemy aliens
+                local enemyAlienLeft = false
+                for k, alien in pairs(self.aliens) do
+                
+                    if alien.type == 'square' then
+                        enemyAlienLeft = true
+                    end
+                
+                end
+        
+                if not enemyAlienLeft then
+                    gStateMachine:change('start')
+                end
+            
             end
         end
     end
@@ -221,7 +287,7 @@ function Level:render()
         obstacle:render()
     end
 
-    -- render instruction text if we haven't launched bird
+    -- render instruction text if we haven't launched 
     if not self.launchMarker.launched then
         love.graphics.setFont(gFonts['medium'])
         love.graphics.setColor(0, 0, 0, 1)
@@ -231,12 +297,24 @@ function Level:render()
     end
 
     -- render victory text if all aliens are dead
-    if #self.aliens == 0 then
+    -- check to see if there any square ones left - if not, then is victory
+    local enemyAlienLeft = false
+    for k, alien in pairs(self.aliens) do
+    
+        if alien.type == 'square' then
+            enemyAlienLeft = true
+        end
+    
+    end
+
+    if not enemyAlienLeft then
         love.graphics.setFont(gFonts['huge'])
         love.graphics.setColor(0, 0, 0, 1)
         love.graphics.printf('VICTORY', 0, VIRTUAL_HEIGHT / 2 - 32, VIRTUAL_WIDTH, 'center')
         love.graphics.setColor(1, 1, 1, 1)
     end
+
+
 end
 
 
@@ -247,10 +325,6 @@ function Level:spawnPlayers()
     if not self.playerSplit and self.launchMarker.launched then
 
         
-        -- todo see the instructions about not ending launchmarker until all have come to a stop
-        -- todo maybe use a diff table or otherwise change logic to end level
-        -- because currently I think there are still "enemies" in the table so it never ends
-
         local origX = self.launchMarker.alien.body:getX( )
         local origY = self.launchMarker.alien.body:getY( )
 
