@@ -119,7 +119,7 @@ function Level:init()
     self.obstacles = {}
 
     -- simple edge shape to represent collision for ground
-    self.edgeShape = love.physics.newEdgeShape(0, 0, VIRTUAL_WIDTH * 3, 0)
+    self.edgeShape = love.physics.newEdgeShape(0, 0, VIRTUAL_WIDTH * 10, 0)
 
     -- spawn an alien to try and destroy
     table.insert(self.aliens, Alien(self.world, 'square', VIRTUAL_WIDTH - 80, VIRTUAL_HEIGHT - TILE_SIZE - ALIEN_SIZE / 2, 'Alien'))
@@ -196,7 +196,7 @@ function Level:update(dt)
 
 
         -- if we fired our alien to the left or it's almost done rolling, respawn
-        if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
+        if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) or xPos > VIRTUAL_WIDTH then
             print("alien1 has stopped moving")
             -- if there are 2 more to check, wait for them as well
             if self.playerSplit then
@@ -207,11 +207,13 @@ function Level:update(dt)
                 local xPos3, yPos3 = self.alien3.body:getPosition()
                 local xVel3, yVel3 = self.alien3.body:getLinearVelocity()
             
+                print(xPos3)
+                print(xPos2)
         
                 -- I added > VIRTUAL_WIDTH to fix a bug where it would not end if alien2 or alien3 flew off the screen to the right
 
-                if (xPos2 < 0 or xPos2 > VIRTUAL_WIDTH -50 or (math.abs(xVel2) + math.abs(yVel2) < 1.5)) 
-                    and (xPos3 < 0 or xPos2 > VIRTUAL_WIDTH -50 or (math.abs(xVel3) + math.abs(yVel3) < 1.5)) then
+                if (xPos2 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel2) + math.abs(yVel2) < 1.5)) 
+                    and (xPos3 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel3) + math.abs(yVel3) < 1.5)) then
                 
                     -- this always happens, post-split or not
                     self.launchMarker.alien.body:destroy()
