@@ -208,10 +208,10 @@ function Level:update(dt)
                 local xVel3, yVel3 = self.alien3.body:getLinearVelocity()
             
         
-        -- I added > VIRTUAL_WIDTH to fix a bug where it would not end if alien2 or alien3 flew off the screen to the right
+                -- I added > VIRTUAL_WIDTH to fix a bug where it would not end if alien2 or alien3 flew off the screen to the right
 
-                if (xPos2 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel2) + math.abs(yVel2) < 1.5)) 
-                    and (xPos3 < 0 or xPos2 > VIRTUAL_WIDTH or (math.abs(xVel3) + math.abs(yVel3) < 1.5)) then
+                if (xPos2 < 0 or xPos2 > VIRTUAL_WIDTH -50 or (math.abs(xVel2) + math.abs(yVel2) < 1.5)) 
+                    and (xPos3 < 0 or xPos2 > VIRTUAL_WIDTH -50 or (math.abs(xVel3) + math.abs(yVel3) < 1.5)) then
                 
                     -- this always happens, post-split or not
                     self.launchMarker.alien.body:destroy()
